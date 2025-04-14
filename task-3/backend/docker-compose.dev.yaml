@@ -1,0 +1,20 @@
+services:
+    backend:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        ports:
+            - "8000:8000"
+        volumes:
+            - ./assets:/app/assets
+            - ./config:/app/config
+            - ./migrations:/app/migrations
+            - ./public:/app/public
+            - ./src:/app/src
+            - ./templates:/app/templates
+            - ./tests:/app/tests
+            - ./translations:/app/translations
+            - ./sqlite:/app/sqlite
+        environment:
+            - APP_ENV=dev
+            - COMPOSER_ALLOW_SUPERUSER=1

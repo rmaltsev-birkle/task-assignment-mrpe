@@ -1,0 +1,45 @@
+FROM php:8.4-cli
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+  git \
+  unzip \
+  libzip-dev \
+  && docker-php-ext-install zip pdo pdo_mysql
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Symfony CLI
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash \
+  && apt-get install -y symfony-cli
+
+# Set working directory
+WORKDIR /app
+
+# Copy composer files
+COPY composer.json composer.lock ./
+
+# Install dependencies
+RUN composer install \
+  --no-interaction \
+  --no-plugins \
+  --no-scripts \
+  --prefer-dist
+
+RUN composer require symfony/runtime
+
+# Copy rest of the application
+COPY . .
+
+# Run composer scripts
+RUN composer run-script auto-scripts
+
+# Generate certs
+RUN symfony server:ca:install
+
+# Expose port
+EXPOSE 8000
+
+# Start Symfony server
+CMD ["symfony", "server:start", "--port=8000", "--no-tls", "--allow-http", "--allow-all-ip"]

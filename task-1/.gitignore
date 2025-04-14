@@ -1,0 +1,50 @@
+# Composer dependencies
+
+/vendor/
+
+# PHPStorm project files
+
+/.idea/
+
+# Laravel specific
+
+/storage/
+/bootstrap/cache/
+
+# Logs and environment files
+
+_.log
+.env
+.env._.backup
+
+# PHPUnit
+
+.phpunit.cache
+.phpunit.result.cache
+
+# Cache and session files
+
+_.cache
+_.session
+
+# Node modules
+
+/node_modules/
+
+# Build directories
+
+/public/build/
+/public/storage/
+
+# Temporary files
+
+_.tmp
+_.swp
+\*.swo
+.DS_Store
+
+# Backup files
+
+_.bak
+_.orig
+\*.save
