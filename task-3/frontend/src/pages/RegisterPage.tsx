@@ -1,4 +1,4 @@
-import { register } from "@/api/register";
+import { useRegisterMutation } from "@/slices/register-api-slice";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -52,11 +52,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>();
-  const [errors, setErrors] = useState<string[] | undefined>();
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const location = useLocation();
   const [username, setUsername] = useState(location.state?.username ?? "");
+  const [register, { isLoading }] = useRegisterMutation();
+  const [error, setError] = useState<{ message: string } | undefined>();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleClickShowPasswordConfirmation = () => setShowPasswordConfirmation((show) => !show);
@@ -88,10 +89,11 @@ export default function LoginPage() {
       return;
     }
 
-    const registrationResult = await register({ username, password });
-
-    if (!registrationResult.success) {
-      setErrors(registrationResult.errors);
+    const registrationSuccess = await register({ username, password })
+      .unwrap()
+      .then(() => true)
+      .catch(setError);
+    if (!registrationSuccess) {
       return;
     }
 
@@ -118,12 +120,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
-              {errors?.map((error) => (
-                <Alert key={error} severity="error">
-                  {error}
-                </Alert>
-              ))}
-
+              {error ? <Alert severity="error">{error.message}</Alert> : null}
               <TextField
                 fullWidth
                 error={!!fieldErrors?.username}
@@ -213,7 +210,13 @@ export default function LoginPage() {
                 }}
               />
 
-              <Button type="submit" variant="contained" fullWidth>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isLoading}
+                loading={isLoading}
+              >
                 Register
               </Button>
             </Stack>

@@ -1,4 +1,4 @@
-import { authenticate } from "@/api/authenticate";
+import { useLoginMutation } from "@/slices/auth-api-slice";
 import { userSingedIn } from "@/slices/auth-slice";
 import { AppDispatch } from "@/store";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -42,13 +42,16 @@ type FieldErrors = z.ZodError<Credentials>["formErrors"]["fieldErrors"];
 export default function LoginPage() {
   const dispatch = useDispatch<AppDispatch>();
   const [showPassword, setShowPassword] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>();
-  const [errors, setErrors] = useState<string[] | undefined>();
-  const [existingUser, setExistingUser] = useState(true);
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const location = useLocation();
   const [username, setUsername] = useState(location.state?.username ?? "");
+  const [login, { isLoading }] = useLoginMutation();
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>();
+  const [error, setError] = useState<
+    { message: string; meta?: Record<string, unknown> } | undefined
+  >();
+  const suggestUserRegistration = error && !error.meta?.existing_user;
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -77,11 +80,9 @@ export default function LoginPage() {
       return;
     }
 
-    const authResult = await authenticate({ username, password });
+    const authResult = await login({ username, password }).unwrap().catch(setError);
 
-    if (!authResult.success) {
-      setErrors(authResult.errors);
-      setExistingUser(Boolean(authResult.meta?.existing_user));
+    if (!authResult) {
       return;
     }
 
@@ -89,8 +90,8 @@ export default function LoginPage() {
 
     dispatch(
       userSingedIn({
-        token: authResult.data.token,
-        refreshToken: authResult.data.refreshToken,
+        token: authResult.token,
+        refreshToken: authResult.refreshToken,
       }),
     );
 
@@ -111,11 +112,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
-              {errors?.map((error) => (
-                <Alert key={error} severity="error">
-                  {error}
-                </Alert>
-              ))}
+              {error ? <Alert severity="error">{error.message}</Alert> : null}
 
               <TextField
                 fullWidth
@@ -172,11 +169,17 @@ export default function LoginPage() {
                 }}
               />
 
-              <Button type="submit" variant="contained" fullWidth>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isLoading}
+                loading={isLoading}
+              >
                 Enter
               </Button>
 
-              {existingUser ? null : (
+              {suggestUserRegistration ? (
                 <Stack spacing={2}>
                   <Alert severity="info">
                     This account does not exist, would you like to register it?
@@ -191,7 +194,7 @@ export default function LoginPage() {
                     Register
                   </Button>
                 </Stack>
-              )}
+              ) : null}
             </Stack>
           </form>
         </CardContent>

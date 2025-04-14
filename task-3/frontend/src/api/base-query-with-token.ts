@@ -1,13 +1,24 @@
 import { AppRootState } from "@/store";
-import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { BaseQueryFn } from "@reduxjs/toolkit/query";
+import { baseQuery, BaseQueryError, BaseQueryOptions } from "./base-query";
 
-export const baseQueryWithToken = fetchBaseQuery({
-  baseUrl: `${import.meta.env.VITE_API_URL}/api`,
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as AppRootState).auth.token;
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
+export const baseQueryWithToken: BaseQueryFn<BaseQueryOptions, unknown, BaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
+  const token = (api.getState() as AppRootState).auth.token;
+
+  const queryArgs = typeof args === "string" ? { url: args } : args;
+
+  return baseQuery(
+    {
+      ...queryArgs,
+      headers: {
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+    },
+    api,
+    extraOptions,
+  );
+};

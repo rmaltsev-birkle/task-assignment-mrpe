@@ -17,6 +17,7 @@ type RequestConfig<T> = {
   body?: unknown;
   headers?: Record<string, string>;
   transform?: (data: unknown) => T;
+  signal?: AbortSignal;
 };
 
 export async function makeRequest<T>({
@@ -25,9 +26,11 @@ export async function makeRequest<T>({
   body,
   headers = {},
   transform = (data) => data as T,
+  signal,
 }: RequestConfig<T>): Promise<ApiResult<T>> {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
+      signal,
       method,
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +54,7 @@ export async function makeRequest<T>({
 
       return {
         success: false,
-        errors: [errorData.message],
+        errors: [errorData.detail ?? errorData.message],
         meta: errorData,
       };
     }

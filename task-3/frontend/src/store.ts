@@ -1,14 +1,22 @@
 import { Action, configureStore, ThunkAction } from "@reduxjs/toolkit";
 import authReducer from "./slices/auth-slice";
-import { countersApiSlice } from "./slices/counter-api-slice";
+import { counterApiSlice } from "./slices/counter-api-slice";
+import { authApiSlice } from "./slices/auth-api-slice";
+import { registerApiSlice } from "./slices/register-api-slice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    [countersApiSlice.reducerPath]: countersApiSlice.reducer,
+    [counterApiSlice.reducerPath]: counterApiSlice.reducer,
+    [authApiSlice.reducerPath]: authApiSlice.reducer,
+    [registerApiSlice.reducerPath]: registerApiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) => {
-    return getDefaultMiddleware().concat(countersApiSlice.middleware);
+    return getDefaultMiddleware().concat(
+      counterApiSlice.middleware,
+      authApiSlice.middleware,
+      registerApiSlice.middleware,
+    );
   },
 });
 

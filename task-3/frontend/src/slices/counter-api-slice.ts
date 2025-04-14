@@ -1,4 +1,5 @@
 import { baseQueryWithReauth } from "@/api/base-query-with-reauth";
+import { API_ENDPOINTS } from "@/api/endpoints";
 import { Optional } from "@/lib/utils";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
@@ -7,23 +8,23 @@ type Counter = {
   value: number;
 };
 
-export const countersApiSlice = createApi({
-  reducerPath: "counters",
+export const counterApiSlice = createApi({
+  reducerPath: "counterApi",
   baseQuery: baseQueryWithReauth,
   tagTypes: ["Counter"],
   endpoints: (builder) => {
     return {
       getCounters: builder.query<Counter[], { userId?: number }>({
-        query: ({ userId }) => `/counters?user=${userId}`,
+        query: ({ userId }) => `${API_ENDPOINTS.COUNTERS}${userId ? `?user=${userId}` : ""}`,
         providesTags: [{ type: "Counter" }],
       }),
       getCounter: builder.query<Counter, { id: number }>({
-        query: ({ id }) => `/counters/${id}`,
+        query: ({ id }) => `/${API_ENDPOINTS.COUNTERS}/${id}`,
         providesTags: [{ type: "Counter" }],
       }),
       createCounter: builder.mutation<Counter, Omit<Counter, "id">>({
         query: (counter) => ({
-          url: "/counters",
+          url: API_ENDPOINTS.COUNTERS,
           method: "POST",
           body: counter,
         }),
@@ -31,7 +32,7 @@ export const countersApiSlice = createApi({
       }),
       updateCounter: builder.mutation<Counter, Counter>({
         query: (counter) => ({
-          url: `/counters/${counter.id}`,
+          url: `${API_ENDPOINTS.COUNTERS}/${counter.id}`,
           method: "PUT",
           body: counter,
         }),
@@ -39,7 +40,7 @@ export const countersApiSlice = createApi({
       }),
       upsertCounter: builder.mutation<Counter, Optional<Counter, "id">>({
         query: (counter) => ({
-          url: `/counters${counter.id ? `/${counter.id}` : ""}`,
+          url: `${API_ENDPOINTS.COUNTERS}${counter.id ? `/${counter.id}` : ""}`,
           method: counter.id ? "PUT" : "POST",
           body: counter,
         }),
@@ -55,4 +56,4 @@ export const {
   useCreateCounterMutation,
   useUpdateCounterMutation,
   useUpsertCounterMutation,
-} = countersApiSlice;
+} = counterApiSlice;
